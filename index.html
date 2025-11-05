@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Tool Web App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #374151;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Transition for theme switching */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        /* Rich text editor styles */
+        .editor-content {
+            min-height: 300px;
+            outline: none;
+        }
+        .editor-content:focus {
+            outline: none;
+        }
+        .editor-content img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* Image gallery styles */
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        /* Loading animation */
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-md">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                    <i class="fas fa-tools mr-2"></i>Multi-Tool Web App
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Tab Navigation -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
+            <div class="flex flex-wrap border-b border-gray-200 dark:border-gray-700">
+                <button class="tab-btn px-6 py-3 font-medium text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400" data-tab="notepad">
+                    <i class="fas fa-sticky-note mr-2"></i>Notepad
+                </button>
+                <button class="tab-btn px-6 py-3 font-medium text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400" data-tab="image-tools">
+                    <i class="fas fa-image mr-2"></i>Image Tools
+                </button>
+                <button class="tab-btn px-6 py-3 font-medium text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400" data-tab="settings">
+                    <i class="fas fa-cog mr-2"></i>Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Notepad Tab -->
+            <div id="notepad-tab" class="tab-panel">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <div class="mb-4 flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="bold">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="italic">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="underline">
+                            <i class="fas fa-underline"></i>
+                        </button>
+                        <div class="border-l border-gray-300 dark:border-gray-600 mx-2"></div>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="justifyLeft">
+                            <i class="fas fa-align-left"></i>
+                        </button>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="justifyCenter">
+                            <i class="fas fa-align-center"></i>
+                        </button>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="justifyRight">
+                            <i class="fas fa-align-right"></i>
+                        </button>
+                        <div class="border-l border-gray-300 dark:border-gray-600 mx-2"></div>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="insertUnorderedList">
+                            <i class="fas fa-list-ul"></i>
+                        </button>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="insertOrderedList">
+                            <i class="fas fa-list-ol"></i>
+                        </button>
+                        <div class="border-l border-gray-300 dark:border-gray-600 mx-2"></div>
+                        <select class="editor-select px-3 py-1 rounded bg-gray-200 dark:bg-gray-700" id="font-size">
+                            <option value="1">Small</option>
+                            <option value="3" selected>Normal</option>
+                            <option value="5">Large</option>
+                            <option value="7">Extra Large</option>
+                        </select>
+                        <input type="color" class="editor-color w-8 h-8 rounded" id="text-color" value="#000000">
+                        <div class="border-l border-gray-300 dark:border-gray-600 mx-2"></div>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="undo">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                        <button class="editor-btn px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600" data-command="redo">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                    <div id="editor" class="editor-content p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700" contenteditable="true">
+                        Start typing your notes here...
+                    </div>
+                    <div class="mt-4 flex justify-between">
+                        <button id="clear-editor" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                            <i class="fas fa-trash mr-2"></i>Clear
+                        </button>
+                        <div class="space-x-2">
+                            <button id="save-local" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                                <i class="fas fa-save mr-2"></i>Save Locally
+                            </button>
+                            <button id="download-text" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                                <i class="fas fa-download mr-2"></i>Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Tools Tab -->
+            <div id="image-tools-tab" class="tab-panel hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Image Tools Sidebar -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                            <h2 class="text-xl font-semibold mb-4">Image Tools</h2>
+                            <div class="space-y-2">
+                                <button id="thumbnail-tool" class="image-tool-btn w-full text-left px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-indigo-100 dark:hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-compress mr-2"></i>Thumbnail Generator
+                                </button>
+                                <button id="resize-tool" class="image-tool-btn w-full text-left px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-indigo-100 dark:hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-expand-arrows-alt mr-2"></i>Resize
+                                </button>
+                                <button id="compress-tool" class="image-tool-btn w-full text-left px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-indigo-100 dark:hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-file-archive mr-2"></i>Compress
+                                </button>
+                                <button id="convert-tool" class="image-tool-btn w-full text-left px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-indigo-100 dark:hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-exchange-alt mr-2"></i>Convert
+                                </button>
+                                <button id="watermark-tool" class="image-tool-btn w-full text-left px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-indigo-100 dark:hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-tint mr-2"></i>Watermark
+                                </button>
+                                <button id="merge-tool" class="image-tool-btn w-full text-left px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-indigo-100 dark:hover:bg-gray-600 transition-colors">
+                                    <i class="fas fa-object-group mr-2"></i>Image Merger
+                                </button>
+                            </div>
+                            
+                            <!-- Image Upload -->
+                            <div class="mt-6">
+                                <label for="image-upload" class="block w-full cursor-pointer">
+                                    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors">
+                                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                        <p id="upload-prompt" class="text-sm text-gray-600 dark:text-gray-400">
+                                            Select an Image
+                                        </p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">or drag and drop</p>
+                                    </div>
+                                </label>
+                                <input type="file" id="image-upload" class="hidden" accept="image/*" multiple>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Preview and Controls -->
+                    <div class="lg:col-span-2">
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                            <h2 class="text-xl font-semibold mb-4">Preview</h2>
+                            <div id="image-preview-container" class="min-h-[300px] flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                                <div class="text-center text-gray-500 dark:text-gray-400">
+                                    <i class="fas fa-image text-4xl mb-2"></i>
+                                    <p>No image selected</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Tool Controls -->
+                            <div id="tool-controls" class="mt-6 space-y-4">
+                                <!-- Thumbnail Controls -->
+                                <div id="thumbnail-controls" class="image-tool-panel hidden">
+                                    <h3 class="text-lg font-medium mb-3">Thumbnail Settings</h3>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Width (px)</label>
+                                            <input type="number" id="thumb-width" value="150" min="50" max="500" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Height (px)</label>
+                                            <input type="number" id="thumb-height" value="150" min="50" max="500" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex justify-end">
+                                        <button id="generate-thumbnail" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                                            Generate Thumbnail
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Resize Controls -->
+                                <div id="resize-controls" class="image-tool-panel hidden">
+                                    <h3 class="text-lg font-medium mb-3">Resize Settings</h3>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Width (px)</label>
+                                            <input type="number" id="resize-width" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Height (px)</label>
+                                            <input type="number" id="resize-height" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="maintain-aspect" checked class="mr-2">
+                                            <span class="text-sm">Maintain aspect ratio</span>
+                                        </label>
+                                    </div>
+                                    <div class="mt-4 flex justify-end">
+                                        <button id="apply-resize" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                                            Apply Resize
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Compress Controls -->
+                                <div id="compress-controls" class="image-tool-panel hidden">
+                                    <h3 class="text-lg font-medium mb-3">Compression Settings</h3>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Quality (1-100)</label>
+                                        <input type="range" id="compress-quality" min="1" max="100" value="80" class="w-full">
+                                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                            <span>Low</span>
+                                            <span id="quality-value">80</span>
+                                            <span>High</span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex justify-end">
+                                        <button id="apply-compress" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                                            Apply Compression
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Convert Controls -->
+                                <div id="convert-controls" class="image-tool-panel hidden">
+                                    <h3 class="text-lg font-medium mb-3">Convert Format</h3>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Output Format</label>
+                                        <select id="output-format" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                            <option value="jpeg">JPEG</option>
+                                            <option value="png">PNG</option>
+                                            <option value="webp">WebP</option>
+                                        </select>
+                                    </div>
+                                    <div class="mt-4 flex justify-end">
+                                        <button id="apply-convert" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                                            Convert Image
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Watermark Controls -->
+                                <div id="watermark-controls" class="image-tool-panel hidden">
+                                    <h3 class="text-lg font-medium mb-3">Watermark Settings</h3>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-sm font-medium mb-1">Text</label>
+                                            <input type="text" id="watermark-text" placeholder="Enter watermark text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-sm font-medium mb-1">Position</label>
+                                                <select id="watermark-position" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                                    <option value="top-left">Top Left</option>
+                                                    <option value="top-right">Top Right</option>
+                                                    <option value="bottom-left">Bottom Left</option>
+                                                    <option value="bottom-right">Bottom Right</option>
+                                                    <option value="center">Center</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium mb-1">Opacity</label>
+                                                <input type="range" id="watermark-opacity" min="0" max="100" value="50" class="w-full">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-sm font-medium mb-1">Font Size</label>
+                                                <input type="number" id="watermark-size" value="20" min="10" max="100" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium mb-1">Color</label>
+                                                <input type="color" id="watermark-color" value="#ffffff" class="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex justify-end">
+                                        <button id="apply-watermark" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                                            Apply Watermark
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Merge Controls -->
+                                <div id="merge-controls" class="image-tool-panel hidden">
+                                    <!-- This will be populated by showMergeControls() function -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-panel hidden">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-6">Settings</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-medium mb-3">Appearance</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between">
+                                    <span>Dark Mode</span>
+                                    <div class="relative">
+                                        <input type="checkbox" id="dark-mode-toggle" class="sr-only">
+                                        <div class="w-10 h-6 bg-gray-300 dark:bg-indigo-600 rounded-full shadow-inner"></div>
+                                        <div class="dot absolute w-4 h-4 bg-white rounded-full shadow left-1 top-1 transition"></div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium mb-3">Storage</h3>
+                            <div class="space-y-3">
+                                <button id="clear-storage" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-trash mr-2"></i>Clear All Local Data
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-medium mb-3">About</h3>
+                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                                <p>Multi-Tool Web App v1.0</p>
+                                <p>A comprehensive tool for text editing and image manipulation</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="fixed bottom-4 right-4 z-50"></div>
+
+    <script>
+        // Global variables
+        let currentImageData = null;
+        let selectedMergeImages = [];
+        let mergedImageData = null;
+        let currentTool = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            initializeTabs();
+            initializeEditor();
+            initializeImageTools();
+            initializeSettings();
+            loadSavedContent();
+        });
+
+        // Theme Management
+        function initializeTheme() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                darkModeToggle.checked = true;
+            }
+            
+            themeToggle.addEventListener('click', toggleTheme);
+            darkModeToggle.addEventListener('change', toggleTheme);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                darkModeToggle.checked = false;
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                darkModeToggle.checked = true;
+            }
+        }
+
+        // Tab Management
+        function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.getAttribute('data-tab');
+                    
+                    // Update button states
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'border-b-2', 'border-indigo-600', 'dark:border-indigo-400');
+                        btn.classList.add('text-gray-600', 'dark:text-gray-400');
+                    });
+                    
+                    button.classList.remove('text-gray-600', 'dark:text-gray-400');
+                    button.classList.add('text-indigo-600', 'dark:text-indigo-400', 'border-b-2', 'border-indigo-600', 'dark:border-indigo-400');
+                    
+                    // Update panel visibility
+                    tabPanels.forEach(panel => {
+                        panel.classList.add('hidden');
+                    });
+                    
+                    document.getElementById(`${targetTab}-tab`).classList.remove('hidden');
+                });
+            });
+        }
+
+        // Rich Text Editor
+        function initializeEditor() {
+            const editor = document.getElementById('editor');
+            const editorButtons = document.querySelectorAll('.editor-btn');
+            const fontSizeSelect = document.getElementById('font-size');
+            const textColorInput = document.getElementById('text-color');
+            
+            // Add event listeners to editor buttons
+            editorButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const command = button.getAttribute('data-command');
+                    document.execCommand(command, false, null);
+                    editor.focus();
+                });
+            });
+            
+            // Font size change
+            fontSizeSelect.addEventListener('change', () => {
+                document.execCommand('fontSize', false, fontSizeSelect.value);
+                editor.focus();
+            });
+            
+            // Text color change
+            textColorInput.addEventListener('change', () => {
+                document.execCommand('foreColor', false, textColorInput.value);
+                editor.focus();
+            });
+            
+            // Clear editor
+            document.getElementById('clear-editor').addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear all content?')) {
+                    editor.innerHTML = '';
+                    showNotification('Editor cleared', 'info');
+                }
+            });
+            
+            // Save locally
+            document.getElementById('save-local').addEventListener('click', () => {
+                const content = editor.innerHTML;
+                localStorage.setItem('notepad-content', content);
+                showNotification('Content saved locally', 'success');
+            });
+            
+            // Download as text file
+            document.getElementById('download-text').addEventListener('click', () => {
+                const content = editor.innerText;
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `notepad-${new Date().toISOString().slice(0, 10)}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification('File downloaded successfully', 'success');
+            });
+            
+            // Auto-save
+            editor.addEventListener('input', () => {
+                localStorage.setItem('notepad-content', editor.innerHTML);
+            });
+        }
+
+        // Image Tools
+        function initializeImageTools() {
+            const imageToolButtons = document.querySelectorAll('.image-tool-btn');
+            const imageUpload = document.getElementById('image-upload');
+            
+            // Tool selection
+            imageToolButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tool = button.id.replace('-tool', '');
+                    selectImageTool(tool);
+                });
+            });
+            
+            // Image upload
+            imageUpload.addEventListener('change', handleImageUpload);
+            
+            // Drag and drop
+            const uploadLabel = imageUpload.previousElementSibling;
+            uploadLabel.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadLabel.classList.add('border-indigo-500', 'dark:border-indigo-400');
+            });
+            
+            uploadLabel.addEventListener('dragleave', () => {
+                uploadLabel.classList.remove('border-indigo-500', 'dark:border-indigo-400');
+            });
+            
+            uploadLabel.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadLabel.classList.remove('border-indigo-500', 'dark:border-indigo-400');
+                
+                const files = Array.from(e.dataTransfer.files);
+                
+                if (files.length > 0) {
+                    processImageFiles(files);
+                }
+            });
+            
+            // Initialize tool-specific event listeners
+            initializeThumbnailTool();
+            initializeResizeTool();
+            initializeCompressTool();
+            initializeConvertTool();
+            initializeWatermarkTool();
+        }
+
+        function selectImageTool(tool) {
+            // Store current tool
+            currentTool = tool;
+            
+            // Hide all tool panels
+            document.querySelectorAll('.image-tool-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            
+            // Reset merge images when switching away from merge tool
+            if (tool !== 'merge' && selectedMergeImages) {
+                selectedMergeImages = [];
+                mergedImageData = null;
+            }
+            
+            // Update active state in toolbar
+            document.querySelectorAll('.image-tool-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            });
+            
+            const activeButton = document.getElementById(`${tool}-tool`);
+            if (activeButton) {
+                activeButton.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+                activeButton.classList.add('bg-indigo-600', 'text-white');
+            }
+            
+            // Clear preview container when switching tools
+            document.getElementById('image-preview-container').innerHTML = '';
+            
+            // Show the appropriate control panel for the selected tool
+            const controlPanel = document.getElementById(`${tool}-controls`);
+            if (controlPanel) {
+                controlPanel.classList.remove('hidden');
+            }
+            
+            // Special handling for merge tool
+            if (tool === 'merge') {
+                // Initialize merge mode
+                selectedMergeImages = [];
+                mergedImageData = null;
+                
+                // Update upload prompt
+                document.getElementById('upload-prompt').innerHTML = `
+                    <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Select Multiple Images to Merge</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Choose 2 or more images to combine into one</p>
+                `;
+                
+                // Show merge controls panel immediately
+                showMergeControls();
+            } else {
+                // Reset upload prompt for other tools
+                document.getElementById('upload-prompt').innerHTML = `
+                    <p class="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">Select an Image</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Choose an image to ${tool}</p>
+                `;
+            }
+        }
+
+        function handleImageUpload(e) {
+            const files = Array.from(e.target.files);
+            
+            if (files.length > 0) {
+                processImageFiles(files);
+            }
+            
+            // Reset the input value
+            e.target.value = '';
+        }
+
+        function processImageFiles(files) {
+            // For merge tool, handle multiple files
+            if (currentTool === 'merge') {
+                // Process each file
+                files.forEach(file => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(event) {
+                            const imageData = {
+                                name: file.name,
+                                size: file.size,
+                                type: file.type,
+                                dataURL: event.target.result
+                            };
+                            
+                            showImagePreview(imageData);
+                        };
+                        
+                        reader.readAsDataURL(file);
+                    } else {
+                        showNotification(`${file.name} is not a valid image file`, 'error');
+                    }
+                });
+            } else {
+                // For other tools, only handle the first file
+                const file = files[0];
+                
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        const imageData = {
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            dataURL: event.target.result
+                        };
+                        
+                        currentImageData = imageData;
+                        showImagePreview(imageData);
+                        
+                        // Update resize tool with image dimensions
+                        if (currentTool === 'resize') {
+                            updateResizeDimensions(imageData);
+                        }
+                    };
+                    
+                    reader.readAsDataURL(file);
+                } else {
+                    showNotification(`${file.name} is not a valid image file`, 'error');
+                }
+            }
+        }
+
+        // Enhanced showImagePreview function to handle multiple images
+        function showImagePreview(imageData) {
+            const previewContainer = document.getElementById('image-preview-container');
+            
+            // Check if we're in merge mode
+            if (currentTool === 'merge') {
+                // For merge mode, we need to handle multiple images
+                if (!selectedMergeImages) {
+                    selectedMergeImages = [];
+                }
+                
+                // Add the new image to our array
+                selectedMergeImages.push(imageData);
+                
+                // Clear the container and rebuild with all selected images
+                previewContainer.innerHTML = '';
+                
+                // Create a grid container for selected images
+                const selectedImagesGrid = document.createElement('div');
+                selectedImagesGrid.id = 'selected-images-grid';
+                selectedImagesGrid.className = 'grid grid-cols-2 gap-2 mb-4';
+                
+                // Add each selected image to the grid
+                selectedMergeImages.forEach((img, index) => {
+                    const imageWrapper = document.createElement('div');
+                    imageWrapper.className = 'relative group';
+                    
+                    const imgElement = document.createElement('img');
+                    imgElement.src = img.dataURL;
+                    imgElement.className = 'w-full h-32 object-cover rounded border-2 border-indigo-500';
+                    
+                    // Add remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.onclick = () => removeMergeImage(index);
+                    
+                    imageWrapper.appendChild(imgElement);
+                    imageWrapper.appendChild(removeBtn);
+                    selectedImagesGrid.appendChild(imageWrapper);
+                });
+                
+                previewContainer.appendChild(selectedImagesGrid);
+                
+                // Add merge result preview container (initially hidden)
+                let mergeResultPreview = document.getElementById('merge-result-preview');
+                if (!mergeResultPreview) {
+                    mergeResultPreview = document.createElement('div');
+                    mergeResultPreview.id = 'merge-result-preview';
+                    mergeResultPreview.className = 'hidden mt-4';
+                    previewContainer.appendChild(mergeResultPreview);
+                }
+                
+                // Update merge controls state
+                updateMergeControlsState();
+            } else {
+                // For non-merge modes, show single image as before
+                previewContainer.innerHTML = `
+                    <img src="${imageData.dataURL}" alt="Preview" class="max-w-full max-h-96 mx-auto rounded-lg shadow-lg">
+                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+                        ${imageData.name} (${formatFileSize(imageData.size)})
+                    </div>
+                `;
+            }
+        }
+
+        // Helper function to remove an image from the merge selection
+        function removeMergeImage(index) {
+            selectedMergeImages.splice(index, 1);
+            
+            // Re-render the preview
+            if (selectedMergeImages.length > 0) {
+                // Temporarily store the images and clear the array
+                const tempImages = [...selectedMergeImages];
+                selectedMergeImages = [];
+                
+                // Re-add each image to trigger the preview update
+                tempImages.forEach(img => showImagePreview(img));
+            } else {
+                // No images left, clear the preview
+                document.getElementById('image-preview-container').innerHTML = '';
+                updateMergeControlsState();
+            }
+        }
+
+        // Updated showMergeControls() function
+        function showMergeControls() {
+            const mergeControls = document.getElementById('merge-controls');
+            mergeControls.classList.remove('hidden');
+            
+            // Update the controls HTML with separate Apply and Download buttons
+            mergeControls.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Merge Settings</h3>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Direction</label>
+                        <select id="merge-direction" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
+                            <option value="horizontal">Horizontal</option>
+                            <option value="vertical">Vertical</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Spacing (px)</label>
+                        <input type="number" id="merge-spacing" min="0" max="50" value="0" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Background Color</label>
+                        <input type="color" id="merge-bg-color" value="#ffffff" class="w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700">
+                    </div>
+                    
+                    <div class="flex justify-end space-x-2">
+                        <button id="apply-merge" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            Apply Merge
+                        </button>
+                        <button id="download-merge" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors hidden">
+                            Download
+                        </button>
+                    </div>
+                    
+                    <div id="merge-loading" class="hidden mt-4 flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                        <span class="ml-2 text-gray-600 dark:text-gray-400">Processing images...</span>
+                    </div>
+                    
+                    <div id="merge-result-info" class="hidden mt-4 p-2 bg-gray-100 dark:bg-gray-700 rounded text-sm text-gray-600 dark:text-gray-400">
+                        <!-- Result info will be displayed here -->
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners
+            document.getElementById('apply-merge').addEventListener('click', applyMerge);
+            document.getElementById('download-merge').addEventListener('click', downloadMergedImage);
+        }
+
+        function updateMergeControlsState() {
+            const applyButton = document.getElementById('apply-merge');
+            if (applyButton) {
+                if (selectedMergeImages.length >= 2) {
+                    applyButton.disabled = false;
+                } else {
+                    applyButton.disabled = true;
+                }
+            }
+        }
+
+        // Apply merge function - creates the merged image and shows preview
+        function applyMerge() {
+            if (!selectedMergeImages || selectedMergeImages.length < 2) {
+                showNotification('Please select at least 2 images to merge', 'error');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('merge-loading').classList.remove('hidden');
+            document.getElementById('apply-merge').disabled = true;
+            
+            // Get merge settings
+            const direction = document.getElementById('merge-direction').value;
+            const spacing = parseInt(document.getElementById('merge-spacing').value) || 0;
+            const bgColor = document.getElementById('merge-bg-color').value;
+            
+            // Process images with a slight delay to show loading state
+            setTimeout(() => {
+                try {
+                    // Create a canvas for the merged image
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Calculate dimensions based on direction
+                    let totalWidth = 0;
+                    let totalHeight = 0;
+                    let maxWidth = 0;
+                    let maxHeight = 0;
+                    
+                    // Load all images
+                    const loadedImages = [];
+                    const promises = selectedMergeImages.map(imgData => {
+                        return new Promise((resolve) => {
+                            const img = new Image();
+                            img.onload = () => {
+                                loadedImages.push(img);
+                                
+                                if (direction === 'horizontal') {
+                                    totalWidth += img.width;
+                                    maxHeight = Math.max(maxHeight, img.height);
+                                } else {
+                                    totalHeight += img.height;
+                                    maxWidth = Math.max(maxWidth, img.width);
+                                }
+                                
+                                resolve();
+                            };
+                            img.src = imgData.dataURL;
+                        });
+                    });
+                    
+                    Promise.all(promises).then(() => {
+                        // Set canvas dimensions
+                        if (direction === 'horizontal') {
+                            canvas.width = totalWidth + (spacing * (loadedImages.length - 1));
+                            canvas.height = maxHeight;
+                        } else {
+                            canvas.width = maxWidth;
+                            canvas.height = totalHeight + (spacing * (loadedImages.length - 1));
+                        }
+                        
+                        // Fill background
+                        ctx.fillStyle = bgColor;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Draw images
+                        let currentX = 0;
+                        let currentY = 0;
+                        
+                        loadedImages.forEach(img => {
+                            if (direction === 'horizontal') {
+                                // Center vertically
+                                const y = (canvas.height - img.height) / 2;
+                                ctx.drawImage(img, currentX, y);
+                                currentX += img.width + spacing;
+                            } else {
+                                // Center horizontally
+                                const x = (canvas.width - img.width) / 2;
+                                ctx.drawImage(img, x, currentY);
+                                currentY += img.height + spacing;
+                            }
+                        });
+                        
+                        // Store the merged image data
+                        mergedImageData = canvas.toDataURL('image/png');
+                        
+                        // Show the preview
+                        const previewContainer = document.getElementById('merge-result-preview');
+                        previewContainer.innerHTML = `
+                            <h4 class="text-md font-semibold mb-2 text-gray-800 dark:text-white">Merged Image Preview</h4>
+                            <img src="${mergedImageData}" alt="Merged Image" class="max-w-full max-h-64 mx-auto rounded-lg shadow-lg">
+                        `;
+                        previewContainer.classList.remove('hidden');
+                        
+                        // Show result info
+                        const fileSize = Math.round(mergedImageData.length * 0.75 / 1024); // Approximate size in KB
+                        document.getElementById('merge-result-info').innerHTML = `
+                            <p>Dimensions: ${canvas.width} x ${canvas.height}px</p>
+                            <p>File Size: ~${fileSize} KB</p>
+                        `;
+                        document.getElementById('merge-result-info').classList.remove('hidden');
+                        
+                        // Show download button
+                        document.getElementById('download-merge').classList.remove('hidden');
+                        
+                        // Hide loading state
+                        document.getElementById('merge-loading').classList.add('hidden');
+                        document.getElementById('apply-merge').disabled = false;
+                        
+                        showNotification('Images merged successfully! You can now download the result.', 'success');
+                    });
+                } catch (error) {
+                    console.error('Error merging images:', error);
+                    showNotification('Failed to merge images. Please try again.', 'error');
+                    
+                    // Hide loading state
+                    document.getElementById('merge-loading').classList.add('hidden');
+                    document.getElementById('apply-merge').disabled = false;
+                }
+            }, 500); // Small delay to show loading state
+        }
+
+        // Download merged image function
+        function downloadMergedImage() {
+            if (!mergedImageData) {
+                showNotification('No merged image to download. Please apply merge first.', 'error');
+                return;
+            }
+            
+            // Create a temporary link element
+            const link = document.createElement('a');
+            link.href = mergedImageData;
+            link.download = `merged-image-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Image downloaded successfully!', 'success');
+        }
+
+        // Update resize dimensions when image is loaded
+        function updateResizeDimensions(imageData) {
+            const img = new Image();
+            img.onload = function() {
+                document.getElementById('resize-width').value = img.width;
+                document.getElementById('resize-height').value = img.height;
+            };
+            img.src = imageData.dataURL;
+        }
+
+        // Thumbnail Tool
+        function initializeThumbnailTool() {
+            document.getElementById('generate-thumbnail').addEventListener('click', () => {
+                if (!currentImageData) {
+                    showNotification('Please select an image first', 'error');
+                    return;
+                }
+                
+                const width = parseInt(document.getElementById('thumb-width').value);
+                const height = parseInt(document.getElementById('thumb-height').value);
+                
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    // Calculate scaling and positioning to cover the entire canvas
+                    const scale = Math.max(width / img.width, height / img.height);
+                    const x = (width / 2) - (img.width / 2) * scale;
+                    const y = (height / 2) - (img.height / 2) * scale;
+                    
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                    
+                    // Update preview
+                    const previewContainer = document.getElementById('image-preview-container');
+                    previewContainer.innerHTML = `
+                        <img src="${canvas.toDataURL()}" alt="Thumbnail" class="max-w-full max-h-96 mx-auto rounded-lg shadow-lg">
+                        <div class="mt-4 flex justify-center">
+                            <button id="download-thumbnail" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                                Download Thumbnail
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add download functionality
+                    document.getElementById('download-thumbnail').addEventListener('click', () => {
+                        const link = document.createElement('a');
+                        link.href = canvas.toDataURL();
+                        link.download = `thumbnail-${Date.now()}.jpg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showNotification('Thumbnail downloaded successfully', 'success');
+                    });
+                };
+                img.src = currentImageData.dataURL;
+            });
+        }
+
+        // Resize Tool
+        function initializeResizeTool() {
+            const widthInput = document.getElementById('resize-width');
+            const heightInput = document.getElementById('resize-height');
+            const maintainAspectCheckbox = document.getElementById('maintain-aspect');
+            
+            // Maintain aspect ratio
+            widthInput.addEventListener('input', () => {
+                if (maintainAspectCheckbox.checked && currentImageData) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const ratio = img.height / img.width;
+                        heightInput.value = Math.round(widthInput.value * ratio);
+                    };
+                    img.src = currentImageData.dataURL;
+                }
+            });
+            
+            heightInput.addEventListener('input', () => {
+                if (maintainAspectCheckbox.checked && currentImageData) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const ratio = img.width / img.height;
+                        widthInput.value = Math.round(heightInput.value * ratio);
+                    };
+                    img.src = currentImageData.dataURL;
+                }
+            });
+            
+            document.getElementById('apply-resize').addEventListener('click', () => {
+                if (!currentImageData) {
+                    showNotification('Please select an image first', 'error');
+                    return;
+                }
+                
+                const width = parseInt(widthInput.value);
+                const height = parseInt(heightInput.value);
+                
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Update current image data
+                    currentImageData.dataURL = canvas.toDataURL();
+                    
+                    // Update preview
+                    const previewContainer = document.getElementById('image-preview-container');
+                    previewContainer.innerHTML = `
+                        <img src="${currentImageData.dataURL}" alt="Resized" class="max-w-full max-h-96 mx-auto rounded-lg shadow-lg">
+                        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+                            ${currentImageData.name} (${formatFileSize(currentImageData.size)}) - Resized to ${width}x${height}
+                        </div>
+                        <div class="mt-4 flex justify-center">
+                            <button id="download-resized" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                                Download Resized Image
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add download functionality
+                    document.getElementById('download-resized').addEventListener('click', () => {
+                        const link = document.createElement('a');
+                        link.href = currentImageData.dataURL;
+                        link.download = `resized-${Date.now()}.jpg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showNotification('Resized image downloaded successfully', 'success');
+                    });
+                };
+                img.src = currentImageData.dataURL;
+            });
+        }
+
+        // Compress Tool
+        function initializeCompressTool() {
+            const qualitySlider = document.getElementById('compress-quality');
+            const qualityValue = document.getElementById('quality-value');
+            
+            qualitySlider.addEventListener('input', () => {
+                qualityValue.textContent = qualitySlider.value;
+            });
+            
+            document.getElementById('apply-compress').addEventListener('click', () => {
+                if (!currentImageData) {
+                    showNotification('Please select an image first', 'error');
+                    return;
+                }
+                
+                const quality = parseInt(qualitySlider.value) / 100;
+                
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const compressedDataURL = canvas.toDataURL('image/jpeg', quality);
+                    
+                    // Calculate size reduction
+                    const originalSize = currentImageData.dataURL.length * 0.75;
+                    const compressedSize = compressedDataURL.length * 0.75;
+                    const reduction = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+                    
+                    // Update preview
+                    const previewContainer = document.getElementById('image-preview-container');
+                    previewContainer.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="text-sm font-medium mb-2">Original</h4>
+                                <img src="${currentImageData.dataURL}" alt="Original" class="w-full h-48 object-cover rounded-lg">
+                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">${formatFileSize(originalSize)}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium mb-2">Compressed (${qualitySlider.value}%)</h4>
+                                <img src="${compressedDataURL}" alt="Compressed" class="w-full h-48 object-cover rounded-lg">
+                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">${formatFileSize(compressedSize)} (${reduction}% smaller)</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-center">
+                            <button id="download-compressed" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                                Download Compressed Image
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add download functionality
+                    document.getElementById('download-compressed').addEventListener('click', () => {
+                        const link = document.createElement('a');
+                        link.href = compressedDataURL;
+                        link.download = `compressed-${Date.now()}.jpg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showNotification('Compressed image downloaded successfully', 'success');
+                    });
+                };
+                img.src = currentImageData.dataURL;
+            });
+        }
+
+        // Convert Tool
+        function initializeConvertTool() {
+            document.getElementById('apply-convert').addEventListener('click', () => {
+                if (!currentImageData) {
+                    showNotification('Please select an image first', 'error');
+                    return;
+                }
+                
+                const format = document.getElementById('output-format').value;
+                const mimeType = format === 'jpeg' ? 'image/jpeg' : `image/${format}`;
+                
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // For PNG/WebP, preserve transparency
+                    if (format !== 'jpeg') {
+                        ctx.drawImage(img, 0, 0);
+                    } else {
+                        // For JPEG, add white background
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                    }
+                    
+                    const convertedDataURL = canvas.toDataURL(mimeType);
+                    
+                    // Update preview
+                    const previewContainer = document.getElementById('image-preview-container');
+                    previewContainer.innerHTML = `
+                        <img src="${convertedDataURL}" alt="Converted" class="max-w-full max-h-96 mx-auto rounded-lg shadow-lg">
+                        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+                            Converted to ${format.toUpperCase()}
+                        </div>
+                        <div class="mt-4 flex justify-center">
+                            <button id="download-converted" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                                Download as ${format.toUpperCase()}
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add download functionality
+                    document.getElementById('download-converted').addEventListener('click', () => {
+                        const link = document.createElement('a');
+                        link.href = convertedDataURL;
+                        link.download = `converted-${Date.now()}.${format}`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showNotification(`Image converted to ${format.toUpperCase()} successfully`, 'success');
+                    });
+                };
+                img.src = currentImageData.dataURL;
+            });
+        }
+
+        // Watermark Tool
+        function initializeWatermarkTool() {
+            document.getElementById('apply-watermark').addEventListener('click', () => {
+                if (!currentImageData) {
+                    showNotification('Please select an image first', 'error');
+                    return;
+                }
+                
+                const text = document.getElementById('watermark-text').value;
+                if (!text) {
+                    showNotification('Please enter watermark text', 'error');
+                    return;
+                }
+                
+                const position = document.getElementById('watermark-position').value;
+                const opacity = parseInt(document.getElementById('watermark-opacity').value) / 100;
+                const fontSize = parseInt(document.getElementById('watermark-size').value);
+                const color = document.getElementById('watermark-color').value;
+                
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    
+                    // Draw the original image
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Configure watermark text
+                    ctx.font = `${fontSize}px Arial`;
+                    ctx.fillStyle = color;
+                    ctx.globalAlpha = opacity;
+                    
+                    // Calculate text position
+                    const textMetrics = ctx.measureText(text);
+                    const textWidth = textMetrics.width;
+                    const textHeight = fontSize;
+                    const padding = 20;
+                    
+                    let x, y;
+                    switch(position) {
+                        case 'top-left':
+                            x = padding;
+                            y = padding + textHeight;
+                            break;
+                        case 'top-right':
+                            x = canvas.width - textWidth - padding;
+                            y = padding + textHeight;
+                            break;
+                        case 'bottom-left':
+                            x = padding;
+                            y = canvas.height - padding;
+                            break;
+                        case 'bottom-right':
+                            x = canvas.width - textWidth - padding;
+                            y = canvas.height - padding;
+                            break;
+                        case 'center':
+                            x = (canvas.width - textWidth) / 2;
+                            y = (canvas.height + textHeight) / 2;
+                            break;
+                    }
+                    
+                    // Draw watermark
+                    ctx.fillText(text, x, y);
+                    
+                    // Update preview
+                    const previewContainer = document.getElementById('image-preview-container');
+                    previewContainer.innerHTML = `
+                        <img src="${canvas.toDataURL()}" alt="Watermarked" class="max-w-full max-h-96 mx-auto rounded-lg shadow-lg">
+                        <div class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+                            Watermark applied
+                        </div>
+                        <div class="mt-4 flex justify-center">
+                            <button id="download-watermarked" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                                Download Watermarked Image
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add download functionality
+                    document.getElementById('download-watermarked').addEventListener('click', () => {
+                        const link = document.createElement('a');
+                        link.href = canvas.toDataURL();
+                        link.download = `watermarked-${Date.now()}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showNotification('Watermarked image downloaded successfully', 'success');
+                    });
+                };
+                img.src = currentImageData.dataURL;
+            });
+        }
+
+        // Settings
+        function initializeSettings() {
+            // Dark mode toggle in settings
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            darkModeToggle.addEventListener('change', toggleTheme);
+            
+            // Clear storage
+            document.getElementById('clear-storage').addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear all local data? This action cannot be undone.')) {
+                    localStorage.clear();
+                    showNotification('All local data cleared', 'info');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            });
+        }
+
+        // Utility Functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `mb-2 px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 transform transition-all duration-300 translate-x-full`;
+            
+            // Set color based on type
+            if (type === 'success') {
+                notification.classList.add('bg-green-500', 'text-white');
+            } else if (type === 'error') {
+                notification.classList.add('bg-red-500', 'text-white');
+            } else {
+                notification.classList.add('bg-blue-500', 'text-white');
+            }
+            
+            // Add icon based on type
+            let icon = '';
+            if (type === 'success') {
+                icon = '<i class="fas fa-check-circle"></i>';
+            } else if (type === 'error') {
+                icon = '<i class="fas fa-exclamation-circle"></i>';
+            } else {
+                icon = '<i class="fas fa-info-circle"></i>';
+            }
+            
+            notification.innerHTML = `
+                ${icon}
+                <span>${message}</span>
+            `;
+            
+            // Add to container
+            container.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+                notification.classList.add('translate-x-0');
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        function loadSavedContent() {
+            // Load saved notepad content
+            const savedContent = localStorage.getItem('notepad-content');
+            if (savedContent) {
+                document.getElementById('editor').innerHTML = savedContent;
+            }
+        }
+    </script>
+</body>
+</html>
